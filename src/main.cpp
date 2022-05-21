@@ -52,7 +52,7 @@ void glitch() {
   while(digitalRead(NRST));
   DutPowerOn();
   uint32_t cycles = ESP.getCycleCount() - startCycles;
-  Serial.printf("Glitched %d cycles\n", cycles);
+  Serial.printf("Glitched in %d cycles\n", cycles);
   delay(1000);
   digitalWrite(BOOT0, 0);
   pinMode(NRST, OUTPUT);
