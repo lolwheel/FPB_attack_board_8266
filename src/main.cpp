@@ -33,54 +33,40 @@ void setup() {
   Serial.println("ESP ready");
 }
 
-const String TRIGGER = "GLITCH";
-String runningPhrase;
-boolean shouldGlitch = false;
+boolean haveReadChar = false;
+boolean alreadyGlitched = false;
 
 void serialParsingLoop() {
   while(DutSerial.available() > 0) {
     Serial.write(DutSerial.read());
   }
-
-  if (Serial.available() <= 0) {
-    return;
+  while(Serial.available() > 0) {
+    haveReadChar = true;
+    DutSerial.write(Serial.read());
   }
-  DutSerial.write(Serial.peek());
-  runningPhrase += (char) Serial.read();
-
-  if (!TRIGGER.startsWith(runningPhrase)) {
-    runningPhrase.clear();
-    return;
-  }
-  if (TRIGGER != runningPhrase) {
-    return;
-  }
-  shouldGlitch = true;
-  runningPhrase.clear();
-
 }
 
-void loop() {
-  serialParsingLoop();
-
-  if (!shouldGlitch) {
-    return;
-  }
-  shouldGlitch = false;
+void glitch() {
+  uint32_t startCycles = ESP.getCycleCount();
   DutPowerOff();
-  int cycles = 0;
-  while(digitalRead(NRST)) {
-    cycles++;
-  }
+  while(digitalRead(NRST));
   DutPowerOn();
-  Serial.print("Glitched in ");
-  Serial.print(cycles);
-  Serial.print("cycles \n");
+  uint32_t cycles = ESP.getCycleCount() - startCycles;
+  Serial.printf("Glitched %d cycles\n", cycles);
   delay(1000);
   digitalWrite(BOOT0, 0);
   pinMode(NRST, OUTPUT);
   digitalWrite(NRST, 0);
   delay(500);
   pinMode(NRST, INPUT);
+}
+
+void loop() {
+  serialParsingLoop();
+  if (alreadyGlitched || !haveReadChar) {
+    return;
+  }
+  alreadyGlitched = true;
+  glitch();
 } 
 
