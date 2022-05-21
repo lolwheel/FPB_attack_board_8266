@@ -26,11 +26,12 @@ void setup() {
   pinMode(BOOT0, OUTPUT);
   pinMode(NRST, INPUT);
   digitalWrite(BOOT0, 1);
+  digitalWrite(NRST, OUTPUT);
   DutPowerOn();
 
   Serial.begin(9600);
   DutSerial.begin(9600, SWSERIAL_8N1, DUT_RX, DUT_TX, false);
-  Serial.println("ESP ready");
+  Serial.println("ESP ready, press any button when shellcode is uploaded and debugger is PHYSICALLY disconnected\n");
 }
 
 boolean haveReadChar = false;
@@ -58,6 +59,7 @@ void glitch() {
   pinMode(NRST, OUTPUT);
   digitalWrite(NRST, 0);
   delay(500);
+  digitalWrite(NRST, 1);
   pinMode(NRST, INPUT);
 }
 
