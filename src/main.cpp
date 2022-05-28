@@ -26,7 +26,6 @@ void setup() {
   pinMode(BOOT0, OUTPUT);
   pinMode(NRST, INPUT);
   digitalWrite(BOOT0, 1);
-  digitalWrite(NRST, OUTPUT);
   DutPowerOn();
 
   Serial.begin(9600);
@@ -37,7 +36,7 @@ void setup() {
 boolean haveReadChar = false;
 boolean alreadyGlitched = false;
 
-void serialParsingLoop() {
+void IRAM_ATTR serialParsingLoop() {
   while(DutSerial.available() > 0) {
     Serial.write(DutSerial.read());
   }
@@ -47,12 +46,15 @@ void serialParsingLoop() {
   }
 }
 
-void glitch() {
+void IRAM_ATTR glitch() {
+  Serial.printf("NRST before glitching = %d\n", digitalRead(NRST));
+  noInterrupts();
   uint32_t startCycles = ESP.getCycleCount();
   DutPowerOff();
   while(digitalRead(NRST));
   DutPowerOn();
   uint32_t cycles = ESP.getCycleCount() - startCycles;
+  interrupts();
   Serial.printf("Glitched in %d cycles\n", cycles);
   delay(1000);
   digitalWrite(BOOT0, 0);
@@ -63,7 +65,7 @@ void glitch() {
   pinMode(NRST, INPUT);
 }
 
-void loop() {
+void IRAM_ATTR loop() {
   serialParsingLoop();
   if (alreadyGlitched || !haveReadChar) {
     return;
