@@ -28,7 +28,7 @@ void setup() {
   digitalWrite(BOOT0, 1);
   DutPowerOn();
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   DutSerial.begin(9600, SWSERIAL_8N1, DUT_RX, DUT_TX, false);
   Serial.println("ESP ready, press any button when shellcode is uploaded and debugger is PHYSICALLY disconnected\n");
 }
@@ -37,10 +37,10 @@ boolean haveReadChar = false;
 boolean alreadyGlitched = false;
 
 void IRAM_ATTR serialParsingLoop() {
-  while(DutSerial.available() > 0) {
+  if(DutSerial.available() > 0) {
     Serial.write(DutSerial.read());
   }
-  while(Serial.available() > 0) {
+  if(Serial.available() > 0) {
     haveReadChar = true;
     DutSerial.write(Serial.read());
   }
